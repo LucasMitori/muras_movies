@@ -1,0 +1,65 @@
+# Full containerized stack: postgres + backend + web.
+# `docker compose up --build` builds and runs everything; the backend
+# entrypoint auto-runs migrations and seeds the one admin account on every
+# start (see backend/docker-entrypoint.sh and apps/accounts/management/
+# commands/ensure_admin.py). For fast-reload native dev instead, use
+# `ops/docker-compose.dev.yml` (Postgres only) with `uv run` / `pnpm dev`.
+name: muratori
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: muratori
+      POSTGRES_PASSWORD: muratori
+      POSTGRES_DB: muratori
+    volumes:
+      - muratori_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U muratori -d muratori"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_SECRET_KEY: change-me-in-every-environment
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend
+      DATABASE_URL: postgres://muratori:muratori@postgres:5432/muratori
+      TMDB_API_KEY: ${TMDB_API_KEY:-}
+      # Seeded automatically by `manage.py ensure_admin` on every start.
+      DJANGO_SUPERUSER_EMAIL: devmitori@gmail.com
+      DJANGO_SUPERUSER_PASSWORD: Admin@Movies2026
+      DJANGO_SUPERUSER_USERNAME: devmitori
+    # Bound to loopback only: this runs Django with DEBUG=True and a
+    # well-known seeded admin password, so it must not be reachable from
+    # anyone else on the LAN/Wi-Fi, only from this machine.
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+      args:
+        NUXT_API_BASE: http://backend:8000
+    restart: unless-stopped
+    environment:
+      NUXT_API_BASE: http://backend:8000
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  muratori_postgres_data:
+    name: muratori_postgres_data
