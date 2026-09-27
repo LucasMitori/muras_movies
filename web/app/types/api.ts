@@ -31,6 +31,35 @@ export interface AuthUser {
   profile: Profile
 }
 
+/** The subset of a Profile that anyone may see (no visibility settings). */
+export interface PublicProfile {
+  display_name: string
+  bio: string
+  avatar: string | null
+}
+
+/**
+ * Another user as the current requester sees them. The relationship and
+ * can_view_* flags are computed per requester on the server, so the client
+ * never has to re-derive the privacy rule.
+ */
+export interface PublicUser {
+  id: number
+  username: string
+  date_joined: string
+  profile: PublicProfile
+  followers_count: number
+  following_count: number
+  ratings_count: number
+  reviews_count: number
+  is_self: boolean
+  is_following: boolean
+  is_followed_by: boolean
+  has_blocked: boolean
+  can_view_library: boolean
+  can_view_diary_dates: boolean
+}
+
 export interface Genre {
   id: number
   name: string
@@ -83,6 +112,17 @@ export interface LibraryEntry {
   status: LibraryStatus
   created_at: string
   updated_at: string
+}
+
+/** Someone else's diary entry: watched_on is null when they withhold dates. */
+export interface PublicDiaryEntry {
+  id: number
+  media_item: number
+  media_item_detail: MediaItemSummary
+  watched_on: string | null
+  is_rewatch: boolean
+  note: string
+  created_at: string
 }
 
 export interface Rating {
