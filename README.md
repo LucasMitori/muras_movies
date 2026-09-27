@@ -88,12 +88,17 @@ Override the seeded credentials with the `DJANGO_SUPERUSER_EMAIL` / `DJANGO_SUPE
 
 ```
 cd backend && uv run pytest && uv run ruff check .
-cd web && pnpm lint
+cd web && pnpm lint && pnpm typecheck
 ```
 
-12 backend tests currently cover: rating/library/review uniqueness constraints, the Bayesian rating
+31 backend tests currently cover: rating/library/review uniqueness constraints, the Bayesian rating
 aggregate, cross-user permission denial (a user cannot edit another user's review or see their
-private library/rating rows), and the register/login/logout session flow.
+private library/rating rows), the register/login/logout session flow, and the social graph
+(follow/block mechanics plus privacy enforcement on profiles, libraries and diaries).
+
+`pnpm typecheck` runs `vue-tsc` over the app via `nuxt typecheck`. It is a separate step rather than
+`typescript.typeCheck` in `nuxt.config.ts` on purpose: the build stays fast, and CI still fails on a
+type error.
 
 ## What's deliberately not built yet
 

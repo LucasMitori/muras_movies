@@ -2,10 +2,14 @@
 const props = defineProps<{ modelValue: number | null; readonly?: boolean; disabled?: boolean }>()
 const emit = defineEmits<{ 'update:modelValue': [value: number] }>()
 
-// VRating's half-increments give us the 0.5..5.0 step scale directly.
-function onUpdate(value: number) {
+// VRating's half-increments give us the 0.5..5.0 step scale directly, but it
+// types its payload as string | number and does hand back strings. Coerce
+// here, or a string reaches the ratings API, which expects a number.
+function onUpdate(value: string | number) {
   if (props.readonly) return
-  emit('update:modelValue', value)
+  const stars = Number(value)
+  if (Number.isNaN(stars)) return
+  emit('update:modelValue', stars)
 }
 </script>
 
