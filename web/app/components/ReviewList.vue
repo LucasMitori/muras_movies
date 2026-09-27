@@ -66,7 +66,14 @@ async function submit() {
 
     <VList v-if="reviews.length" lines="three">
       <VListItem v-for="review in reviews" :key="review.id">
-        <VListItemTitle class="font-weight-medium">{{ review.author.username }}</VListItemTitle>
+        <VListItemTitle class="font-weight-medium">
+          <NuxtLink
+            :to="`/users/${encodeURIComponent(review.author.username)}`"
+            class="text-decoration-none text-high-emphasis"
+          >
+            {{ review.author.username }}
+          </NuxtLink>
+        </VListItemTitle>
         <VListItemSubtitle style="white-space: normal">{{ review.body }}</VListItemSubtitle>
       </VListItem>
     </VList>

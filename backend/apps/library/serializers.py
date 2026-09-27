@@ -44,6 +44,29 @@ class ConsumptionEventSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at"]
 
 
+class PublicConsumptionEventSerializer(serializers.ModelSerializer):
+    """Someone else's diary entry.
+
+    `watched_on` collapses to null unless the context says the viewer may see
+    dates, so the same list can be served to a follower and a stranger without
+    the view having to build two different querysets. The owner's own diary is
+    served by ConsumptionEventSerializer instead, which always includes dates.
+    """
+
+    media_item_detail = MediaItemListSerializer(source="media_item", read_only=True)
+    watched_on = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ConsumptionEvent
+        fields = ["id", "media_item", "media_item_detail", "watched_on", "is_rewatch", "note", "created_at"]
+        read_only_fields = fields
+
+    def get_watched_on(self, obj):
+        if not self.context.get("show_dates"):
+            return None
+        return obj.watched_on.isoformat() if obj.watched_on else None
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     author = ReviewAuthorSerializer(source="user", read_only=True)
