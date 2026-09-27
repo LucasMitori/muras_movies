@@ -1,0 +1,22 @@
+# Normalize every text file to LF in the repository, and check it out as LF
+# regardless of the cloning machine's core.autocrlf setting.
+* text=auto eol=lf
+
+# These run inside Linux containers. A CRLF shebang makes the kernel look for
+# an interpreter literally named "/bin/sh\r", which fails at container start
+# with "bad interpreter" — so they must never be checked out with CRLF.
+*.sh            text eol=lf
+Dockerfile      text eol=lf
+
+# Generated lockfiles: keep them out of review diffs and language stats.
+uv.lock         linguist-generated=true
+pnpm-lock.yaml  linguist-generated=true
+
+# Binary assets git must not try to normalize.
+*.ico   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.woff  binary
+*.woff2 binary
